@@ -1,3 +1,5 @@
 # STM32-IAP-HEX-Merge
-STM32 IAP HEX合并上位机 并在对应地址写入特殊值
-选择写入特殊值会出现帮助提示
+写入特殊值的说明：在地址0x08002FFA处写入0XA5A5
+在合并bootloader与app的时候,在bootloader的hex文件中倒数第二行前面增加一行地址的数据
+:022FFA00A5A58B
+用于标识APP成功下载并运行。
