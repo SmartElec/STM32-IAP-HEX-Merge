@@ -166,34 +166,44 @@ namespace Hex文件合并
             string str1, str2;
             str1 = textBox1.Text.Trim();
             str2 = textBox2.Text.Trim();
-            if (str1 == str2)
+            if ((str1 == str2) && (str1==""))
             {
-                MessageBox.Show("please select diffirent file", "error");
+                MessageBox.Show("please select one file at least", "error");
                 return;
             }
-            if(str1=="")
-            {
-                MessageBox.Show("please select bootloader file", "error");
-                return;
-            }
-            if (str2 == "")
-            {
-                MessageBox.Show("please select app file", "error");
-                return;
-            }
-            Debug.WriteLine(str1);
-            Debug.WriteLine(str2);
+
             StreamReader fileReader=null;
             StreamWriter Newfile = null;
-            
+            DataLineMessage line = new DataLineMessage();
+            string savepath = GetNewPathForDupes(textOutPath.Text);
             try
             {
-                DataLineMessage line = new DataLineMessage();
-                textOutPath.Text = GetNewPathForDupes(textOutPath.Text);
+                if(str1=="")
+                {
+                    File.Copy(str2, savepath);
+                    MessageBox.Show("没有bootloader文件，不支持特殊字节写入", "Tips");
+                    //checkBox1.Checked = false;
+                    if (checkBox2.Checked == true)//确定是否合并文件
+                    {
+                        ReadHexFile(savepath);
+                    }
+                    return;
+                }
+                else if (str2 == "")
+                {
+                    File.Copy(str1, savepath);
+                    MessageBox.Show("没有APP文件，不支持特殊字节写入", "Tips");
+                    //checkBox1.Checked = false;
+                    if (checkBox2.Checked == true)//确定是否合并文件
+                    {
+                        ReadHexFile(savepath);
+                    }
+                    return;
+                }
 
                 //读取文件一
                 fileReader = new StreamReader(str1);
-                Newfile = new StreamWriter(textOutPath.Text);
+                Newfile = new StreamWriter(savepath);
                 string strline = null;
                 UInt32 Nowaddr=0;
                 do
@@ -201,7 +211,6 @@ namespace Hex文件合并
                     strline = fileReader.ReadLine();
                     if (ParaseFileLine(strline, out line))
                     {
-
                         if(line.type==0x01)//结束标志
                         {
                             break;
@@ -216,17 +225,17 @@ namespace Hex文件合并
                                 }
                                 else
                                 {
-                                    checkBox1.Checked = false;
-                                    MessageBox.Show("bootloader过大，不支持特殊字节写入");
+                                   // checkBox1.Checked = false;
+                                    MessageBox.Show("bootloader过大，不支持特殊字节写入","自动跳过写入特殊字节");
                                 }
                                 
                             }
-                            Newfile.WriteLine(strline);
+                            Newfile.WriteLine(strline);//继续保存该行数据
                         }
                         else//数据等
                         {
                             Nowaddr = line.addr;
-                            Newfile.WriteLine(strline);
+                            Newfile.WriteLine(strline);//保存数据
                         }
                     }
                     else
@@ -244,6 +253,10 @@ namespace Hex文件合并
                     Newfile.WriteLine(strline);
                 } while (strline != null);
                 MessageBox.Show("merge successful");
+                if (checkBox2.Checked == true)//确定是否合并文件
+                {
+                    ReadHexFile(savepath);
+                }
             }
             catch (Exception ex)
             {
@@ -258,10 +271,90 @@ namespace Hex文件合并
                 if (Newfile != null)
                 {
                     Newfile.Close();
-                } 
+                }
             }
         }
+        public bool ReadHexFile(string fileName)
+        {
+            if (fileName == null || fileName.Trim() == "")  //文件存在
+            {
+                return false;
+            }
+            using (FileStream fs = new FileStream(fileName, FileMode.Open))  //open file
+            {
+                StreamReader HexReader = new StreamReader(fs);    //读取数据流
+                string szLine = "";
+                string szHex = "";
+                string szAddress = "";
+                string szLength = "";
+                while (true)
+                {
+                    szLine = HexReader.ReadLine();      //读取Hex中一行
+                    if (szLine == null) { break; }          //读取完毕，退出
+                    if (szLine.Substring(0, 1) == ":")    //判断首字符是”:”
+                    {
+                        if (szLine.Substring(1, 8) == "00000001") { break; }  //文件结束标识
+                        //直接解析数据类型标识为 : 00 和 01 的格式
+                        if ((szLine.Substring(8, 1) == "0") || (szLine.Substring(8, 1) == "1"))
+                        {
+                            szHex += szLine.Substring(9, szLine.Length - 11);  //所有数据分一组 
+                            szAddress += szLine.Substring(3, 4); //所有起始地址分一组
+                            szLength += szLine.Substring(1, 2); //所有数据长度归一组
+                        }
+                    }
+                }
+                //将数据字符转换为Hex，并保存在数组 szBin[]
+                Int32 j = 0;
+                Int32 Length = szHex.Length;      //获取长度
+                byte[] szBin = new byte[Length / 2];
+                for (Int32 i = 0; i < Length; i += 2)
+                {
+                    szBin[j] = (byte)Int16.Parse(szHex.Substring(i, 2), System.Globalization.NumberStyles.HexNumber);   //两个字符合并一个Hex 
+                    j++;
+                }
+                //将起始地址的字符转换为Hex，并保存在数组 szAdd []
+                j = 0;
+                Length = szAddress.Length;      //get bytes number of szAddress
+                Int32[] szAdd = new Int32[Length / 4];
+                for (Int32 i = 0; i < Length; i += 4)
+                {
+                    szAdd[j] = Int32.Parse(szAddress.Substring(i, 4), System.Globalization.NumberStyles.HexNumber);  //两个字符合并一个Hex
+                    j++;
+                }
+                //将长度字符转换为Hex，并保存在数组 szLen []
+                j = 0;
+                Length = szLength.Length;      //get bytes number of szAddress
+                byte[] szLen = new byte[Length / 2];
+                for (Int32 i = 0; i < Length; i += 2)
+                {
+                    szLen[j] = (byte)Int16.Parse(szLength.Substring(i, 2), System.Globalization.NumberStyles.HexNumber); // merge two bytes to a hex number
+                    j++;
+                }
+                array_save_data(szAdd, szBin, szLen, Path.ChangeExtension(fileName, "bin"));   //保存为bin
+            }
+            return true;
+        }
+        private void array_save_data(Int32[] address, byte[] data, byte[] length,string Path)
+        {
+            //1.整理数据所需参数
+            int jcount = 0;
+            int max_address = (address[(address.Length) - 1]) + 16;
+            byte[] all_show_data = new byte[max_address];  //存储解析完成的数据数组
+            for (Int32 i = 0; i < all_show_data.Length; i++) { all_show_data[i] = 255; }  //默认全为0
 
+            //2.从address[]数组中获取HEX对应地址
+            for (Int32 i = 0; i < address.Length; i++)
+            {
+                if (i >= 1) { jcount += length[i - 1]; }  //从length[]数组中获取数据对应的长度大小
+                for (int j = 0; j < length[i]; j++)
+                {
+                    all_show_data[address[i] + j] = data[jcount + j]; //all_show_data[]数组中添加数据
+                }
+            }
+            FileStream fs = new FileStream(Path, FileMode.Create);
+            fs.Write(all_show_data, 0, all_show_data.Length);
+            fs.Close();
+        }
         #region 字符串转换函数
         //翻转byte数组
         public static void ReverseBytes(byte[] bytes)

@@ -39,6 +39,7 @@
             this.groupBox1 = new System.Windows.Forms.GroupBox();
             this.groupBox2 = new System.Windows.Forms.GroupBox();
             this.btn_help = new System.Windows.Forms.Button();
+            this.checkBox2 = new System.Windows.Forms.CheckBox();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
             this.SuspendLayout();
@@ -63,9 +64,9 @@
             // 
             // btn_merge
             // 
-            this.btn_merge.Location = new System.Drawing.Point(297, 217);
+            this.btn_merge.Location = new System.Drawing.Point(316, 217);
             this.btn_merge.Name = "btn_merge";
-            this.btn_merge.Size = new System.Drawing.Size(66, 35);
+            this.btn_merge.Size = new System.Drawing.Size(53, 35);
             this.btn_merge.TabIndex = 2;
             this.btn_merge.Text = "合并";
             this.btn_merge.UseVisualStyleBackColor = true;
@@ -95,18 +96,18 @@
             this.btn_outpath.Name = "btn_outpath";
             this.btn_outpath.Size = new System.Drawing.Size(66, 30);
             this.btn_outpath.TabIndex = 5;
-            this.btn_outpath.Text = "默认目录";
+            this.btn_outpath.Text = "修改目录";
             this.btn_outpath.UseVisualStyleBackColor = true;
             this.btn_outpath.Click += new System.EventHandler(this.btn_outpath_Click);
             // 
             // checkBox1
             // 
             this.checkBox1.AutoSize = true;
-            this.checkBox1.Location = new System.Drawing.Point(18, 227);
+            this.checkBox1.Location = new System.Drawing.Point(12, 221);
             this.checkBox1.Name = "checkBox1";
-            this.checkBox1.Size = new System.Drawing.Size(120, 16);
+            this.checkBox1.Size = new System.Drawing.Size(72, 28);
             this.checkBox1.TabIndex = 6;
-            this.checkBox1.Text = "合并时写入特殊值";
+            this.checkBox1.Text = "合并时写\r\n入特殊值\r\n";
             this.checkBox1.UseVisualStyleBackColor = true;
             this.checkBox1.CheckedChanged += new System.EventHandler(this.checkBox1_CheckedChanged);
             // 
@@ -135,7 +136,7 @@
             // 
             // btn_help
             // 
-            this.btn_help.Location = new System.Drawing.Point(190, 222);
+            this.btn_help.Location = new System.Drawing.Point(90, 220);
             this.btn_help.Name = "btn_help";
             this.btn_help.Size = new System.Drawing.Size(62, 29);
             this.btn_help.TabIndex = 9;
@@ -143,11 +144,22 @@
             this.btn_help.UseVisualStyleBackColor = true;
             this.btn_help.Click += new System.EventHandler(this.btn_help_Click);
             // 
+            // checkBox2
+            // 
+            this.checkBox2.AutoSize = true;
+            this.checkBox2.Location = new System.Drawing.Point(186, 227);
+            this.checkBox2.Name = "checkBox2";
+            this.checkBox2.Size = new System.Drawing.Size(126, 16);
+            this.checkBox2.TabIndex = 10;
+            this.checkBox2.Text = "合并后生成bin文件";
+            this.checkBox2.UseVisualStyleBackColor = true;
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(385, 260);
+            this.ClientSize = new System.Drawing.Size(385, 266);
+            this.Controls.Add(this.checkBox2);
             this.Controls.Add(this.btn_help);
             this.Controls.Add(this.groupBox2);
             this.Controls.Add(this.groupBox1);
@@ -180,6 +192,7 @@
         private System.Windows.Forms.GroupBox groupBox1;
         private System.Windows.Forms.GroupBox groupBox2;
         private System.Windows.Forms.Button btn_help;
+        private System.Windows.Forms.CheckBox checkBox2;
     }
 }
 
