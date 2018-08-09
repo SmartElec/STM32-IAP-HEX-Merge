@@ -34,6 +34,11 @@ namespace Hex文件合并
         public Form1()
         {
             InitializeComponent();
+            //允许拖拽
+            this.AllowDrop = true;
+            this.DragEnter += new DragEventHandler(Form1_DragEnter);
+            this.DragDrop += new DragEventHandler(Form1_DragDrop);
+
             checkBox1.Checked = false;
             btn_help.Visible = false;
         }
@@ -489,7 +494,62 @@ namespace Hex文件合并
                 textOutPath.Text = fileName;
             }
         }
+        void Form1_DragEnter(object sender, DragEventArgs e)
+        {
+            if (e.Data.GetDataPresent(DataFormats.FileDrop)) e.Effect = DragDropEffects.All;
+            else e.Effect = DragDropEffects.None;
+        }
+        void Form1_DragDrop(object sender, DragEventArgs e)
+        {
+            //获取第一个文件名
+            string fileName = (e.Data.GetData(DataFormats.FileDrop, false) as String[])[0];
 
+            OpenDropFile(fileName);
+        }
+        void OpenDropFile(string file1)
+        {
+            FileStream filefd = null;
+            StreamReader streamReader = null;
+            DataLineMessage line = new DataLineMessage();
+            filefd = new FileStream(file1, FileMode.Open, FileAccess.Read);
+            streamReader = new StreamReader(filefd, Encoding.Default);
+            filefd.Seek(0, SeekOrigin.Begin);
+            string content = streamReader.ReadLine();
+            if (ParaseFileLine(content, out line))
+            {
+                UInt32 BaseAddr = line.ExtAddr;
+                Debug.WriteLine("line.ExtAddr=0x{0:x8}", BaseAddr);//基地址                 
+                content = streamReader.ReadLine();
+                if (ParaseFileLine(content, out line))
+                {
+                    BaseAddr |= line.addr;//加上偏移地址
+                    if (BaseAddr == 0x08000000)
+                    {
+                        textBox1.Text = file1;
+                    }
+                    else
+                    {
+                        textBox2.Text = file1;
+                    }
+                }
+                else
+                {
+                    MessageBox.Show("file is not correct", "error");
+                }
+            }
+            else
+            {
+                MessageBox.Show("file is not correct", "error");
+            }
+            if (filefd != null)
+            {
+                filefd.Close();
+            }
+            if (streamReader != null)
+            {
+                streamReader.Close();
+            }
+        }
         private void btn_help_Click(object sender, EventArgs e)
         {
             MessageBox.Show("在起始地址偏移0X2FFA的位置写入字节0xA5A5\r\n因此需要使用此功能时Bootloader大小不应超过0x2FFA Byte\r\n", "写入特殊值说明");
