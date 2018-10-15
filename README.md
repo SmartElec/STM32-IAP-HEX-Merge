@@ -1,8 +1,4 @@
 # STM32-IAP-HEX-Merge
-写入特殊值的说明：在地址0x08002FFA处写入0XA5A5
-在合并bootloader与app的时候,在bootloader的hex文件中倒数第二行前面增加一行地址的数据
-:022FFA00A5A58B
-用于标识APP成功下载并运行。
 
 当单独选择一个文件时，可单独转成bin文件
 也可同时选择两个文件合并后转换为bin文件

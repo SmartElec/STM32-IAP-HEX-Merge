@@ -1,8 +1,0 @@
-E:\DOCUMENT\project\C# 2013\Hex文件合并\Hex文件合并\bin\Release\Hex文件合并.exe
-E:\DOCUMENT\project\C# 2013\Hex文件合并\Hex文件合并\bin\Release\Hex文件合并.pdb
-E:\DOCUMENT\project\C# 2013\Hex文件合并\Hex文件合并\obj\Release\Hex文件合并.Form1.resources
-E:\DOCUMENT\project\C# 2013\Hex文件合并\Hex文件合并\obj\Release\Hex文件合并.Properties.Resources.resources
-E:\DOCUMENT\project\C# 2013\Hex文件合并\Hex文件合并\obj\Release\Hex文件合并.csproj.GenerateResource.Cache
-E:\DOCUMENT\project\C# 2013\Hex文件合并\Hex文件合并\obj\Release\Hex文件合并.exe
-E:\DOCUMENT\project\C# 2013\Hex文件合并\Hex文件合并\obj\Release\Hex文件合并.pdb
-E:\DOCUMENT\project\C# 2013\Hex文件合并\Hex文件合并\obj\Release\Hex文件合并.csprojResolveAssemblyReference.cache

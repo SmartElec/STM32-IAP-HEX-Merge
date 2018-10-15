@@ -39,8 +39,8 @@ namespace Hex文件合并
             this.DragEnter += new DragEventHandler(Form1_DragEnter);
             this.DragDrop += new DragEventHandler(Form1_DragDrop);
 
-            checkBox1.Checked = false;
-            btn_help.Visible = false;
+            btn_help.Visible = true;
+            textOutPath.Text = Application.StartupPath + @"/merge.hex";
         }
         bool ParaseFileLine(string inoutstr,out DataLineMessage formatnew)
         {
@@ -135,7 +135,7 @@ namespace Hex文件合并
                                 if (open_fd.FileNames.Length == 2)
                                     textBox1.Text = open_fd.FileNames[1];
                             }
-                            textOutPath.Text = GetNewPathForDupes(System.IO.Path.GetDirectoryName(open_fd.FileNames[0]) + @"\merge.hex");
+                            //textOutPath.Text = GetNewPathForDupes(System.IO.Path.GetDirectoryName(open_fd.FileNames[0]) + @"\merge.hex");
                         }
                         else
                         {
@@ -181,31 +181,33 @@ namespace Hex文件合并
             StreamWriter Newfile = null;
             DataLineMessage line = new DataLineMessage();
             string savepath = GetNewPathForDupes(textOutPath.Text);
+            if (savepath==null)
+            {
+                savepath = GetNewPathForDupes(Application.StartupPath + @"/merge.hex");
+            }
             try
             {
                 if(str1=="")
                 {
                     File.Copy(str2, savepath);
-                    MessageBox.Show("没有bootloader文件，不支持特殊字节写入", "Tips");
-                    //checkBox1.Checked = false;
-                    if (checkBox2.Checked == true)//确定是否合并文件
+                    if (checkBox2.Checked == true)//确定转换为bin文件
                     {
                         ReadHexFile(savepath);
+                        MessageBox.Show("已保存为\n\r" + savepath);
                     }
+                    
                     return;
                 }
                 else if (str2 == "")
                 {
-                    File.Copy(str1, savepath);
-                    MessageBox.Show("没有APP文件，不支持特殊字节写入", "Tips");
-                    //checkBox1.Checked = false;
                     if (checkBox2.Checked == true)//确定是否合并文件
                     {
                         ReadHexFile(savepath);
+                        MessageBox.Show("已保存为\n\r" + savepath);
                     }
+                    
                     return;
                 }
-
                 //读取文件一
                 fileReader = new StreamReader(str1);
                 Newfile = new StreamWriter(savepath);
@@ -222,19 +224,6 @@ namespace Hex文件合并
                         }
                         else if (line.type == 0x05)//入口地址
                         {
-                            if(checkBox1.Checked)
-                            {
-                                if (Nowaddr <= 0x2ff8)
-                                {
-                                    Newfile.WriteLine(":022FFA00A5A58B");//往地址（基地址+0x2FFA）写入0xA5A5
-                                }
-                                else
-                                {
-                                   // checkBox1.Checked = false;
-                                    MessageBox.Show("bootloader过大，不支持特殊字节写入","自动跳过写入特殊字节");
-                                }
-                                
-                            }
                             Newfile.WriteLine(strline);//继续保存该行数据
                         }
                         else//数据等
@@ -250,7 +239,7 @@ namespace Hex文件合并
                     }
 
                 } while (strline != null);
-                //读取文件二 Newfile.WriteLine
+                //读取文件二
                 fileReader = new StreamReader(str2);
                 do
                 {
@@ -260,7 +249,7 @@ namespace Hex文件合并
                 MessageBox.Show("merge successful");
                 if (checkBox2.Checked == true)//确定是否合并文件
                 {
-                    ReadHexFile(savepath);
+                    ReadHexFile(savepath);//转换成bin
                 }
             }
             catch (Exception ex)
@@ -279,6 +268,7 @@ namespace Hex文件合并
                 }
             }
         }
+		#region HEX2BIN	
         public bool ReadHexFile(string fileName)
         {
             if (fileName == null || fileName.Trim() == "")  //文件存在
@@ -292,15 +282,25 @@ namespace Hex文件合并
                 string szHex = "";
                 string szAddress = "";
                 string szLength = "";
+
                 while (true)
                 {
                     szLine = HexReader.ReadLine();      //读取Hex中一行
-                    if (szLine == null) { break; }          //读取完毕，退出
-                    if (szLine.Substring(0, 1) == ":")    //判断首字符是”:”
+                    if(szLine==null)
                     {
-                        if (szLine.Substring(1, 8) == "00000001") { break; }  //文件结束标识
+                        break;//读取完毕，退出
+                    }
+                    int datatype = Parase_HexLineData(szLine);
+                    if (datatype < 0)
+                    {
+                        MessageBox.Show("文件格式有误");
+                        break;//解析失败
+                    }
+                   // if (szLine.Substring(0, 1) == ":")    //判断首字符是":"
+                    {
+                        if (datatype==1) { break; }  //文件结束标识
                         //直接解析数据类型标识为 : 00 和 01 的格式
-                        if ((szLine.Substring(8, 1) == "0") || (szLine.Substring(8, 1) == "1"))
+                        if (datatype == 0)
                         {
                             szHex += szLine.Substring(9, szLine.Length - 11);  //所有数据分一组 
                             szAddress += szLine.Substring(3, 4); //所有起始地址分一组
@@ -360,6 +360,51 @@ namespace Hex文件合并
             fs.Write(all_show_data, 0, all_show_data.Length);
             fs.Close();
         }
+		#endregion 
+        int Parase_HexLineData(string szLine)//返回数据类型01-05
+        {
+            //冒号 本行数据长度(1byte) 本行数据的起始地址(2byte) 数据类型(1byte) 数据(N byte) 校验码(1byte)
+            int Len = szLine.Length - 1;
+
+            if (Len < 10) { return -1; }
+
+            try
+            {
+                if (Len % 2 == 0)
+                {       
+                    if (szLine.Substring(0, 1) == ":")    //判断首字符是":"
+                    {
+                        byte[] BytesData = new byte[Len / 2];  //声明一个长度为hexstring长度一半的字节组
+                        byte checksum = 0;
+          
+                        for (int i = 0; i < BytesData.Length; i++)
+                        {
+                            BytesData[i] = Convert.ToByte(szLine.Substring(i * 2 + 1, 2), 16);  //将hexstring的两个字符转换成16进制的字节组            
+                        }
+                        if (BytesData[0] != (BytesData.Length-5))//长度域与实际长度不符
+                       {
+                           return -1;
+                       }
+
+                        for (int i = 0; i < BytesData.Length -1; i++)
+                        {
+                            checksum+=BytesData[i];
+                        }
+                        if(checksum==(byte)(0-BytesData[BytesData.Length-1]))
+                        {
+                                return BytesData[3];
+                        }
+                    }
+                }
+            }
+            catch
+            {
+
+            }
+
+            return -1;
+        }
+		
         #region 字符串转换函数
         //翻转byte数组
         public static void ReverseBytes(byte[] bytes)
@@ -479,8 +524,9 @@ namespace Hex文件合并
                     newFullPath = Path.Combine(directory, newFilename);
                     counter++;
                 } while (System.IO.File.Exists(newFullPath));
+                return newFullPath;
             }
-            return newFullPath;
+            return null;
         }
         private void btn_outpath_Click(object sender, EventArgs e)
         {
@@ -552,21 +598,7 @@ namespace Hex文件合并
         }
         private void btn_help_Click(object sender, EventArgs e)
         {
-            MessageBox.Show("在起始地址偏移0X2FFA的位置写入字节0xA5A5\r\n因此需要使用此功能时Bootloader大小不应超过0x2FFA Byte\r\n", "写入特殊值说明");
-        }
-
-        private void checkBox1_CheckedChanged(object sender, EventArgs e)
-        {
-            //Debug.WriteLine("checkBox1_CheckedChanged");
-            if(checkBox1.Checked==true)
-            {
-                btn_help.Visible=true;
-            }
-            else
-            {
-                btn_help.Visible = false;
-            }
-            
+            MessageBox.Show("可拖拽hex文件到对话框\r\n合并时自动判断有几个文件\r\n勾选\"生成bin\"自动将一个或多个hex文件转换为一个bin", "说明");
         }
 
     }
