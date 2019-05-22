@@ -181,10 +181,10 @@ namespace Hex文件合并
             StreamWriter Newfile = null;
             DataLineMessage line = new DataLineMessage();
             string savepath = GetNewPathForDupes(textOutPath.Text);
-            if (savepath==null)
-            {
-                savepath = GetNewPathForDupes(Application.StartupPath + @"/merge.hex");
-            }
+            //if (savepath==null)
+            //{
+            //    savepath = GetNewPathForDupes(Application.StartupPath + @"/merge.hex");
+            //}
             try
             {
                 if(str1=="")
@@ -234,6 +234,8 @@ namespace Hex文件合并
                     }
                     else
                     {
+                        fileReader.Close();
+                        Newfile.Close();
                         MessageBox.Show("There have some error in file","merge faild");
                         return;
                     }
@@ -246,6 +248,10 @@ namespace Hex文件合并
                     strline = fileReader.ReadLine();
                     Newfile.WriteLine(strline);
                 } while (strline != null);
+
+                fileReader.Close();
+                Newfile.Close();
+
                 MessageBox.Show("merge successful");
                 if (checkBox2.Checked == true)//确定是否合并文件
                 {
@@ -526,7 +532,7 @@ namespace Hex文件合并
                 } while (System.IO.File.Exists(newFullPath));
                 return newFullPath;
             }
-            return null;
+            return path;
         }
         private void btn_outpath_Click(object sender, EventArgs e)
         {
