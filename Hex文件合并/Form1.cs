@@ -71,11 +71,14 @@ namespace Hex文件合并
                 if((formatnew.type<=0x05)&&(formatnew.type>=0x02))
                 {
                     //扩展地址
-		    formatnew.ExtAddr = (UInt32)((data[4] << 8) | (data[5] << 0));
-		    formatnew.ExtAddr <<= 16;
-                    if(formatnew.length==4)
+                    if(formatnew.length>=2)
                     {
-                        formatnew.ExtAddr |= (UInt32)((data[6] << 8) | (data[7] << 0));
+                        formatnew.ExtAddr = (UInt32)((data[4] << 8) | (data[5] << 0));
+                        formatnew.ExtAddr <<= 16;
+                        if(formatnew.length==4)
+                        {
+                            formatnew.ExtAddr |= (UInt32)((data[6] << 8) | (data[7] << 0));
+                        }
                     }
                 }
                 formatnew.checksum =data[data.Length - 1];
